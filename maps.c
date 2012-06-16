@@ -31,7 +31,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <alloca.h>
 #include <stdbool.h>
 #include <unistd.h>
 
@@ -62,7 +61,7 @@ bool readmaps(pid_t target, list_t * regions)
         return false;
 
     /* construct the maps filename */
-        snprintf(name, sizeof(name), "/proc/%u/maps", target);
+        snprintf(name, sizeof(name), "/proc/%u/map", target);
 
         /* attempt to open the maps file */
         if ((maps = fopen(name, "r")) == NULL) {
@@ -87,8 +86,10 @@ bool readmaps(pid_t target, list_t * regions)
         while (getline(&line, &len, maps) != -1) {
             unsigned long start, end;
             region_t *map = NULL;
-            char read, write, exec, cow, *filename;
-            int offset, dev_major, dev_minor, inode;
+            char read, write, exec, *filename;
+            char cow[] = "NCOW", ndcpy[] = "NNC", typef[] = "default", cred[] = "NCH";
+            int resi, presi, refcnt, shdcnt, flags, crruid;
+            void *vmobj;
             region_type_t type = REGION_TYPE_MISC;
 
             /* slight overallocation */
@@ -101,8 +102,8 @@ bool readmaps(pid_t target, list_t * regions)
             memset(filename, '\0', len);
 
             /* parse each line */
-            if (sscanf(line, "%lx-%lx %c%c%c%c %x %x:%x %u %s", &start, &end, &read,
-                    &write, &exec, &cow, &offset, &dev_major, &dev_minor, &inode, filename) >= 6) {
+            if (sscanf(line, "0x%lx 0x%lx %d %d 0x%llx %c%c%c %d %d 0x%x %s %s %s %s %s %d", &start, &end, &resi, &presi, &vmobj,
+                    &read, &write, &exec, &refcnt, &shdcnt, &flags, cow, ndcpy, typef, filename, cred, &crruid) >= 17) {
                 /*
                  * get the load address for regions of the same ELF file
                  *
@@ -192,18 +193,18 @@ bool readmaps(pid_t target, list_t * regions)
                             useful = true;
                             break;
                         case REGION_HEAP_STACK_EXECUTABLE_BSS:
-                            if (filename[0] == '\0')
+                            if (filename[0] == '-')
                             {
                                 useful = true;
                                 break;
                             } 
                             /* fall through */
                         case REGION_HEAP_STACK_EXECUTABLE:
-                            if (type == REGION_TYPE_HEAP || type == REGION_TYPE_STACK)
+                            if (filename[0] == '-' || type == REGION_TYPE_HEAP || type == REGION_TYPE_STACK)
                             {
                                 useful = true;
                                 break;
-                            }
+                            } // broken on FreeBSD...
                             /* test if the region is mapped to the executable */
                             if (type == REGION_TYPE_EXE ||
                               strncmp(filename, exename, MAX_LINKBUF_SIZE) == 0)
@@ -230,8 +231,8 @@ bool readmaps(pid_t target, list_t * regions)
 
                 /* setup other permissions */
                 map->flags.exec = (exec == 'x');
-                map->flags.shared = (cow == 's');
-                map->flags.private = (cow == 'p');
+                map->flags.shared = (cow[0] == 'C');
+                map->flags.private = (cow[0] == 'N');
 
                 /* save pathname */
                 if (strlen(filename) != 0) {

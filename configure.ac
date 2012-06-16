@@ -38,7 +38,7 @@ AC_C_BIGENDIAN
 # also need to check if the file is zero'ed (some hardened systems)
 AC_CHECK_FILE([/proc/self/maps], [], [
     echo "This system does not seem to have /proc/pid/maps files."
-    exit 1
+#    exit 1
 ])
 
 # also need to check this file works

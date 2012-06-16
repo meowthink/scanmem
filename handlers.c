@@ -33,7 +33,6 @@
 #include <signal.h>
 #include <assert.h>
 #include <setjmp.h>
-#include <alloca.h>
 #include <strings.h>            /*lint -esym(526,strcasecmp) */
 #include <string.h>
 #include <stdbool.h>

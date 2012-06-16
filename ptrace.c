@@ -27,6 +27,7 @@
 # endif
 # define _XOPEN_SOURCE 500
 
+#define __BSD_VISIBLE 1
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>

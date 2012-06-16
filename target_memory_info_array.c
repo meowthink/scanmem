@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <ctype.h>
+#include <sys/types.h>
 
 #include "target_memory_info_array.h"
 #include "show_message.h"
