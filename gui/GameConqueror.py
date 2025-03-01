@@ -934,24 +934,16 @@ class GameConqueror():
             self.cheatlist_liststore[i][0] = False
 
     def read_maps(self):
-        lines = open('/compat/linux/proc/%d/maps' % (self.pid,)).readlines()
+        lines = open('/proc/%d/map' % (self.pid,)).readlines()
         self.maps = []
         for l in lines:
             item = {}
-            info = l.split(' ', 5)
-            addr = info[0]
-            idx = addr.index('-')
-            item['start_addr'] = int(addr[:idx],16)
-            item['end_addr'] = int(addr[idx+1:],16)
+            info = l.split(' ', 14)
+            item['start_addr'] = int(info[0],16)
+            item['end_addr'] = int(info[1],16)
             item['size'] = item['end_addr'] - item['start_addr']
-            item['flags'] = info[1]
-            item['offset'] = info[2]
-            item['dev'] = info[3]
-            item['inode'] = int(info[4])
-            if len(info) < 6:
-                item['pathname'] = ''
-            else:
-                item['pathname'] = info[5].lstrip() # don't use strip
+            item['flags'] = info[5]
+            item['pathname'] = info[12].lstrip() # don't use strip
             self.maps.append(item)
 
     def reset_scan(self):

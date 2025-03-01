@@ -125,7 +125,7 @@ bool sm_attach(pid_t target)
         int fd;
 
         /* print the path to mem file */
-        snprintf(mem, sizeof(mem), "/compat/linux/proc/%d/mem", target);
+        snprintf(mem, sizeof(mem), "/proc/%d/mem", target);
 
         /* attempt to open the file */
         if ((fd = open(mem, O_RDWR)) == -1) {

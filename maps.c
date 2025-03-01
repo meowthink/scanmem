@@ -61,7 +61,7 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
         return false;
 
     /* construct the maps filename */
-    snprintf(name, sizeof(name), "/compat/linux/proc/%u/maps", target);
+    snprintf(name, sizeof(name), "/proc/%u/map", target);
 
     /* attempt to open the maps file */
     if ((maps = fopen(name, "r")) == NULL) {
@@ -72,7 +72,7 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
     show_info("maps file located at %s opened.\n", name);
 
     /* get executable name */
-    snprintf(exelink, sizeof(exelink), "/compat/linux/proc/%u/exe", target);
+    snprintf(exelink, sizeof(exelink), "/proc/%u/file", target);
     linkbuf_size = readlink(exelink, exename, MAX_LINKBUF_SIZE - 1);
     if (linkbuf_size > 0)
     {
@@ -87,8 +87,10 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
     while (getline(&line, &len, maps) != -1) {
         unsigned long start, end;
         region_t *map = NULL;
-        char read, write, exec, cow;
-        int offset, dev_major, dev_minor, inode;
+        char read, write, exec;
+        char cow[] = "NCOW", ndcpy[] = "NNC", typef[] = "default", cred[] = "NCH";
+        int resi, presi, refcnt, shdcnt, flags, crruid;
+        void *vmobj;
         region_type_t type = REGION_TYPE_MISC;
 
         /* slight overallocation */
@@ -98,8 +100,11 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
         memset(filename, '\0', len);
 
         /* parse each line */
-        if (sscanf(line, "%lx-%lx %c%c%c%c %x %x:%x %u %[^\n]", &start, &end, &read,
-                &write, &exec, &cow, &offset, &dev_major, &dev_minor, &inode, filename) >= 6) {
+        if (sscanf(line, "0x%lx 0x%lx %d %d 0x%llx %c%c%c %d %d 0x%x %s %s %s %s %s %d", &start, &end, &resi, &presi, &vmobj,
+                &read, &write, &exec, &refcnt, &shdcnt, &flags, cow, ndcpy, typef, filename, cred, &crruid) >= 17) {
+            if (filename[0] == '-') {
+                filename[0] = '\0';
+            }
             /*
              * get the load address for regions of the same ELF file
              *
@@ -145,7 +150,7 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
             }
             if (code_regions == 0) {
                 /* detect the first region belonging to an ELF file */
-                if (exec == 'x' && filename[0] != '\0') {
+                if (exec == 'x' && filename[0] == '\0') {
                     code_regions++;
                     if (strncmp(filename, exename, MAX_LINKBUF_SIZE) == 0) {
                         exe_regions = 1;
@@ -235,8 +240,8 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
 
                 /* setup other permissions */
                 map->flags.exec = (exec == 'x');
-                map->flags.shared = (cow == 's');
-                map->flags.private = (cow == 'p');
+                map->flags.private = ((cow[0] == 'C') || (vmobj == NULL) || (((strncmp(typef, "default", 7) == 0 || strncmp(typef, "swap", 4) == 0) && (flags & 0x0010) == 0)));
+                map->flags.shared = !map->flags.private;
 
                 /* save pathname */
                 if (strlen(filename) != 0) {

@@ -47,8 +47,8 @@ static enum pstate check_process(pid_t pid)
     char *line = NULL;
     size_t alloc_len = 0;
     char status = '\0';
-    char path_str[128] = "/compat/linux/proc/";
-    int pr_len, path_len = sizeof("/compat/linux/proc/") - 1;
+    char path_str[128] = "/proc/";
+    int pr_len, path_len = sizeof("/proc/") - 1;
 
     /* append $pid/status and check if file exists */
     pr_len = sprintf((path_str + path_len), "%d/status", pid);
