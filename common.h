@@ -41,7 +41,9 @@
 
 /* from string.h in glibc for Android/BSD */
 #ifndef strdupa
+# ifdef HAVE_ALLOCA_H
 # include <alloca.h>
+# endif
 # include <string.h>
 # define strdupa(s)                                                           \
     ({                                                                        \
@@ -53,7 +55,9 @@
 #endif
 
 #ifndef strndupa
+# ifdef HAVE_ALLOCA_H
 # include <alloca.h>
+# endif
 # include <string.h>
 # define strndupa(s, n)                                                       \
     ({                                                                        \

@@ -69,13 +69,13 @@ AS_IF([test "x$enable_procmem" = "xno"], [
 AS_IF([test "x$android" = "xno"], [
   AS_IF([test "x$enable_procmem" != "xno"], [
     # also need to check if the file is zero'ed (some hardened systems)
-    AC_CHECK_FILE([/proc/self/maps], [], [
+    AC_CHECK_FILE([/compat/linux/proc/self/maps], [], [
       echo "This system does not seem to have /proc/pid/maps files."
       exit 1
     ])
 
     # also need to check this file works
-    AC_CHECK_FILE([/proc/self/mem], [
+    AC_CHECK_FILE([/compat/linux/proc/self/mem], [
       # LARGEFILE support required for this to work
       AC_SYS_LARGEFILE
       AC_DEFINE(HAVE_PROCMEM, [1], [Enable /proc/pid/mem support])

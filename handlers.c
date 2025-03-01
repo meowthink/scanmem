@@ -36,7 +36,9 @@
 #include <getopt.h>
 #include <assert.h>
 #include <setjmp.h>
+#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
+#endif
 #include <strings.h>
 #include <string.h>
 #include <stdbool.h>

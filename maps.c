@@ -61,7 +61,7 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
         return false;
 
     /* construct the maps filename */
-    snprintf(name, sizeof(name), "/proc/%u/maps", target);
+    snprintf(name, sizeof(name), "/compat/linux/proc/%u/maps", target);
 
     /* attempt to open the maps file */
     if ((maps = fopen(name, "r")) == NULL) {
@@ -72,7 +72,7 @@ bool sm_readmaps(pid_t target, list_t *regions, region_scan_level_t region_scan_
     show_info("maps file located at %s opened.\n", name);
 
     /* get executable name */
-    snprintf(exelink, sizeof(exelink), "/proc/%u/exe", target);
+    snprintf(exelink, sizeof(exelink), "/compat/linux/proc/%u/exe", target);
     linkbuf_size = readlink(exelink, exename, MAX_LINKBUF_SIZE - 1);
     if (linkbuf_size > 0)
     {

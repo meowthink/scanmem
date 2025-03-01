@@ -892,7 +892,7 @@ class GameConqueror():
 
     def get_process_list(self):
         plist = []
-        for proc in os.popen('ps -wweo pid=,user:16=,command= --sort=-pid').readlines():
+        for proc in reversed(os.popen('ps -axww -o pid= -o user= -o command=').readlines()):
             try:
                 (pid, user, pname) = [tok.strip() for tok in proc.split(None, 2)]
             # process name may be empty, but not the name of the executable
@@ -934,7 +934,7 @@ class GameConqueror():
             self.cheatlist_liststore[i][0] = False
 
     def read_maps(self):
-        lines = open('/proc/%d/maps' % (self.pid,)).readlines()
+        lines = open('/compat/linux/proc/%d/maps' % (self.pid,)).readlines()
         self.maps = []
         for l in lines:
             item = {}
@@ -1180,7 +1180,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Init application
-    GObject.threads_init()
     Gdk.threads_init()
     gc_instance = GameConqueror()
 
